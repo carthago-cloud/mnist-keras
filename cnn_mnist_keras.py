@@ -128,12 +128,12 @@ def generate_and_test_model_config():
         "infer_func": infer,
         "infer_func_input_format": "img",
         "infer_func_output_format": "json",
-        "infer_func_input_sample": img_file,
+        "infer_func_input_sample": str(img_file),
         "train_func": train,
         "metrics":
             {
                 'dataset': "MNIST",
-                'accuracy': accuracy,
+                'accuracy': round(accuracy, 3),
             }
     }
 
@@ -160,4 +160,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #generate_and_test_model_config()
+    generate_and_test_model_config()
