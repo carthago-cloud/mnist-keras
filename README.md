@@ -1,5 +1,8 @@
 [**version: solved**]
 
+1. `cnn_mnist_keras.py` works with the current version of `cinnaroll`
+2. `cnn_mnist_keras_future.py` will hopefully work with an updated version of `cinnaroll`, where model_object is passed to `train_eval()`
+
 # A simple convolutional network in Keras for the MNIST dataset
 
 ### Environment setup
