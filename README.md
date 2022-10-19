@@ -24,3 +24,5 @@ To make sure that the model is working, execute a basic routine (creating, train
 ```
 python cnn_mnist_keras.py
 ```
+
+The MNIST dataset can be accessed through the `tensorflow.keras.datasets` package. To make a prediction on an arbitrary image use the `preprocess_image` function. The output of that you can feed directly into the model.
