@@ -1,3 +1,5 @@
+[**version: solved**]
+
 # A simple convolutional network in Keras for the MNIST dataset
 
 ### Environment setup
@@ -14,7 +16,7 @@ If this does not work and you are on M1 Mac you can try `conda` and `requirement
 
 ### Model
 
-To execute a basic routine (creating, training, evaluating) run:
+To make sure that the model is working, execute a basic routine (creating, training, evaluating) by running:
 
 ```
 python cnn_mnist_keras.py

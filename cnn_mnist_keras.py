@@ -9,6 +9,9 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
+import cinnaroll
+
+
 NUM_CLASSES = 10
 INPUT_SHAPE = (28, 28, 1)
 
@@ -88,12 +91,23 @@ def evaluate_model(model, data):
     print(f"Test accuracy: {score[1]:.3f}")
 
 
-def infer(model_object, input_data):
+def preprocess_image(input_data):
     img = PIL.Image.open(input_data)
     img_processed = img.convert("L").resize(INPUT_SHAPE[:2])
     img_array = np.array(img_processed).reshape((1, ) + INPUT_SHAPE)
-    output = model_object.predict(img_array)
-    return json.dumps(int(np.argmax(output)))
+    return img_array
+
+
+def make_prediction(x):
+    return int(np.argmax(x))
+
+
+# def infer(model_object, input_data):
+#     img = PIL.Image.open(input_data)
+#     img_processed = img.convert("L").resize(INPUT_SHAPE[:2])
+#     img_array = np.array(img_processed).reshape((1, ) + INPUT_SHAPE)
+#     output = model_object.predict(img_array)
+#     return json.dumps(int(np.argmax(output)))
 
 
 def train(model_object, training_data, epochs):
@@ -140,24 +154,37 @@ def generate_and_test_model_config():
     print(model_config)
 
 
-def main():
-    # define the number of classes and expected input shape
-    all_data = load_data(num_classes=NUM_CLASSES, limit=100)
-    model = construct_model(num_classes=NUM_CLASSES, input_shape=INPUT_SHAPE)
+class MyRolloutConfig(cinnaroll.RolloutConfig):
+    @staticmethod
+    def train_eval(): # training and evaluation with metric extraction
+        all_data = load_data(num_classes=NUM_CLASSES, limit=100)
+        X = all_data["train"]["X"]
+        Y = all_data["train"]["Y"]
 
-    # evaluate performance on the test set *before* training
-    print("\nPerformance of a randomly initialised model:")
-    evaluate_model(model=model, data=all_data["test"])
-
-    # set training parameters and perform training
-    print("\nPerform training...")
-    train_model(model=model, all_data=all_data, batch_size=128, epochs=100)
-
-    # evaluate performance on the test set *after* training
-    print("\nPerformance of a trained model:")
-    evaluate_model(model=model, data=all_data["test"])
+        model.fit(X, Y, epochs=5)
+    @staticmethod
+    def infer(model_object, input_data): # input -> processing -> inference -> output
+        img_array = preprocess_image(input_data)
+        out = model_object.predict(img_array)
+        return json.dumps({"output": make_prediction(out)})
 
 
-if __name__ == "__main__":
-    main()
-    generate_and_test_model_config()
+
+# define the number of classes and expected input shape
+all_data = load_data(num_classes=NUM_CLASSES, limit=100)
+model = construct_model(num_classes=NUM_CLASSES, input_shape=INPUT_SHAPE)
+
+model_input_sample = all_data["test"]["X"][0, :, :, :].reshape(1, 28, 28, 1)
+infer_func_input_sample = "/Users/jkaniewski/repos/test/mnist-keras/test_image.png"
+
+myRolloutConfig = MyRolloutConfig(
+    project_id="5zVm00n97",  # project's unique identifier
+    model_object=model,
+    model_input_sample=model_input_sample,  # sample you can pass to model object's predict function
+    infer_func_input_format="img",  # "json", "img" or "file"
+    infer_func_output_format="json",  # "json" or "img" currently supported
+    infer_func_input_sample=infer_func_input_sample,  # note - for file or img just pass file path
+    metrics={}  # optional
+)
+
+cinnaroll.rollout(myRolloutConfig)
