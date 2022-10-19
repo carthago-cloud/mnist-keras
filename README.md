@@ -1,7 +1,4 @@
-[**version: solved**]
-
-1. `cnn_mnist_keras.py` works with the current version of `cinnaroll`
-2. `cnn_mnist_keras_future.py` will hopefully work with an updated version of `cinnaroll`, where model_object is passed to `train_eval()`
+[**version: for user**]
 
 # A simple convolutional network in Keras for the MNIST dataset
 
@@ -24,3 +21,5 @@ To make sure that the model is working, execute a basic routine (creating, train
 ```
 python cnn_mnist_keras.py
 ```
+
+The MNIST dataset can be accessed through the `tensorflow.keras.datasets` package. To make a prediction on an arbitrary image use the `preprocess_image` function. The output of that you can feed directly into the model.

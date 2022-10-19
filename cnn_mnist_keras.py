@@ -1,15 +1,9 @@
 # Ref: https://keras.io/examples/vision/mnist_convnet/
 
-import json
-from pathlib import Path
 import PIL
 import numpy as np
-import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
-
-import cinnaroll
 
 
 NUM_CLASSES = 10
@@ -91,10 +85,10 @@ def evaluate_model(model, data):
     print(f"Test accuracy: {score[1]:.3f}")
 
 
-def preprocess_image(input_data):
-    img = PIL.Image.open(input_data)
+def preprocess_image(img_path):
+    img = PIL.Image.open(img_path)
     img_processed = img.convert("L").resize(INPUT_SHAPE[:2])
-    img_array = np.array(img_processed).reshape((1, ) + INPUT_SHAPE)
+    img_array = np.array(img_processed).reshape((1,) + INPUT_SHAPE)
     return img_array
 
 
@@ -102,89 +96,23 @@ def make_prediction(x):
     return int(np.argmax(x))
 
 
-# def infer(model_object, input_data):
-#     img = PIL.Image.open(input_data)
-#     img_processed = img.convert("L").resize(INPUT_SHAPE[:2])
-#     img_array = np.array(img_processed).reshape((1, ) + INPUT_SHAPE)
-#     output = model_object.predict(img_array)
-#     return json.dumps(int(np.argmax(output)))
-
-
-def train(model_object, training_data, epochs):
-    model_object.fit(
-        training_data["X"],
-        training_data["Y"],
-        batch_size=128,
-        epochs=epochs
-    )
-
-
-def generate_and_test_model_config():
+def main():
+    # define the number of classes and expected input shape
     all_data = load_data(num_classes=NUM_CLASSES, limit=100)
-    model_object = construct_model(num_classes=NUM_CLASSES, input_shape=INPUT_SHAPE)
-    train(model_object, all_data["train"], 50)
+    model = construct_model(num_classes=NUM_CLASSES, input_shape=INPUT_SHAPE)
 
-    # generate sample input to the model and test it
-    sample_input = tf.expand_dims(all_data["test"]["X"][0, :, :, :], 0)
-    model_object.predict(sample_input)
+    # evaluate performance on the test set *before* training
+    print("\nPerformance of a randomly initialised model:")
+    evaluate_model(model=model, data=all_data["test"])
 
-    # generate sample input to the infer function and test it
-    img_file = Path(__file__).parent / "test_image.png"
-    infer(model_object, img_file)
+    # set training parameters and perform training
+    print("\nPerform training...")
+    train_model(model=model, all_data=all_data, batch_size=128, epochs=10)
 
-    # evaluate model to compute accuracy
-    accuracy = model_object.evaluate(all_data["test"]["X"], all_data["test"]["Y"], verbose=0)[1]
-
-    model_config = {
-        "project_id": "2eb823ea",
-        "model_object": model_object,
-        "model_input_sample": sample_input,
-        "infer_func": infer,
-        "infer_func_input_format": "img",
-        "infer_func_output_format": "json",
-        "infer_func_input_sample": str(img_file),
-        "train_func": train,
-        "metrics":
-            {
-                'dataset': "MNIST",
-                'accuracy': round(accuracy, 3),
-            }
-    }
-
-    print(model_config)
+    # evaluate performance on the test set *after* training
+    print("\nPerformance of a trained model:")
+    evaluate_model(model=model, data=all_data["test"])
 
 
-class MyRolloutConfig(cinnaroll.RolloutConfig):
-    @staticmethod
-    def train_eval(): # training and evaluation with metric extraction
-        all_data = load_data(num_classes=NUM_CLASSES, limit=100)
-        X = all_data["train"]["X"]
-        Y = all_data["train"]["Y"]
-
-        model.fit(X, Y, epochs=5)
-    @staticmethod
-    def infer(model_object, input_data): # input -> processing -> inference -> output
-        img_array = preprocess_image(input_data)
-        out = model_object.predict(img_array)
-        return json.dumps({"output": make_prediction(out)})
-
-
-
-# define the number of classes and expected input shape
-all_data = load_data(num_classes=NUM_CLASSES, limit=100)
-model = construct_model(num_classes=NUM_CLASSES, input_shape=INPUT_SHAPE)
-
-model_input_sample = all_data["test"]["X"][0, :, :, :].reshape(1, 28, 28, 1)
-infer_func_input_sample = "/Users/jkaniewski/repos/test/mnist-keras/test_image.png"
-
-myRolloutConfig = MyRolloutConfig(
-    project_id="5zVm00n97",  # project's unique identifier
-    model_object=model,
-    model_input_sample=model_input_sample,  # sample you can pass to model object's predict function
-    infer_func_input_format="img",  # "json", "img" or "file"
-    infer_func_output_format="json",  # "json" or "img" currently supported
-    infer_func_input_sample=infer_func_input_sample,  # note - for file or img just pass file path
-    metrics={}  # optional
-)
-
-cinnaroll.rollout(myRolloutConfig)
+if __name__ == "__main__":
+    main()
