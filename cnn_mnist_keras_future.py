@@ -94,7 +94,7 @@ def evaluate_model(model, data):
 def preprocess_image(input_data):
     img = PIL.Image.open(input_data)
     img_processed = img.convert("L").resize(INPUT_SHAPE[:2])
-    img_array = np.array(img_processed).reshape((1, ) + INPUT_SHAPE)
+    img_array = np.array(img_processed).reshape((1,) + INPUT_SHAPE)
     return img_array
 
 
@@ -112,10 +112,7 @@ def make_prediction(x):
 
 def train(model_object, training_data, epochs):
     model_object.fit(
-        training_data["X"],
-        training_data["Y"],
-        batch_size=128,
-        epochs=epochs
+        training_data["X"], training_data["Y"], batch_size=128, epochs=epochs
     )
 
 
@@ -133,7 +130,9 @@ def generate_and_test_model_config():
     infer(model_object, img_file)
 
     # evaluate model to compute accuracy
-    accuracy = model_object.evaluate(all_data["test"]["X"], all_data["test"]["Y"], verbose=0)[1]
+    accuracy = model_object.evaluate(
+        all_data["test"]["X"], all_data["test"]["Y"], verbose=0
+    )[1]
 
     model_config = {
         "project_id": "2eb823ea",
@@ -144,11 +143,10 @@ def generate_and_test_model_config():
         "infer_func_output_format": "json",
         "infer_func_input_sample": str(img_file),
         "train_func": train,
-        "metrics":
-            {
-                'dataset': "MNIST",
-                'accuracy': round(accuracy, 3),
-            }
+        "metrics": {
+            "dataset": "MNIST",
+            "accuracy": round(accuracy, 3),
+        },
     }
 
     print(model_config)
@@ -156,18 +154,25 @@ def generate_and_test_model_config():
 
 class MyRolloutConfig(cinnaroll.RolloutConfig):
     @staticmethod
-    def train_eval(model_object): # training and evaluation with metric extraction
+    def train_eval(model_object):  # training and evaluation with metric extraction
         all_data = load_data(num_classes=NUM_CLASSES, limit=100)
-        X = all_data["train"]["X"]
-        Y = all_data["train"]["Y"]
 
-        model_object.fit(X, Y, epochs=5)
+        X_train = all_data["train"]["X"]
+        Y_train = all_data["train"]["Y"]
+        model_object.fit(X_train, Y_train, epochs=5)
+
+        X_test = all_data["test"]["X"]
+        Y_test = all_data["test"]["Y"]
+        accuracy = model_object.evaluate(X_test, Y_test)
+
+        metrics = {"dataset": "MNIST", "accuracy": accuracy}
+        return metrics
+
     @staticmethod
-    def infer(model_object, input_data): # input -> processing -> inference -> output
+    def infer(model_object, input_data):  # input -> processing -> inference -> output
         img_array = preprocess_image(input_data)
         out = model_object.predict(img_array)
         return json.dumps({"output": make_prediction(out)})
-
 
 
 # define the number of classes and expected input shape
@@ -184,7 +189,7 @@ myRolloutConfig = MyRolloutConfig(
     infer_func_input_format="img",  # "json", "img" or "file"
     infer_func_output_format="json",  # "json" or "img" currently supported
     infer_func_input_sample=infer_func_input_sample,  # note - for file or img just pass file path
-    metrics={}  # optional
+    metrics={},  # optional
 )
 
 cinnaroll.rollout(myRolloutConfig)
