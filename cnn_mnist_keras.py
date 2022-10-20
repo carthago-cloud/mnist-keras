@@ -102,14 +102,6 @@ def make_prediction(x):
     return int(np.argmax(x))
 
 
-# def infer(model_object, input_data):
-#     img = PIL.Image.open(input_data)
-#     img_processed = img.convert("L").resize(INPUT_SHAPE[:2])
-#     img_array = np.array(img_processed).reshape((1, ) + INPUT_SHAPE)
-#     output = model_object.predict(img_array)
-#     return json.dumps(int(np.argmax(output)))
-
-
 def train(model_object, training_data, epochs):
     model_object.fit(
         training_data["X"],
@@ -162,13 +154,11 @@ class MyRolloutConfig(cinnaroll.RolloutConfig):
         Y = all_data["train"]["Y"]
 
         model.fit(X, Y, epochs=5)
-        
-        accuracy = model_object.evaluate(X, Y)
-        metrics = {
-            "dataset": "random_floats",
-            "accuracy": accuracy
-        }
-        return metrics
+        X_test = all_data["test"]["X"]
+        Y_test = all_data["test"]["Y"]
+        accuracy = model_object.evaluate(X_test, Y_test)
+
+        metrics = {"dataset": "MNIST", "accuracy": accuracy}
 
     @staticmethod
     def infer(model_object, input_data): # input -> processing -> inference -> output
