@@ -162,6 +162,14 @@ class MyRolloutConfig(cinnaroll.RolloutConfig):
         Y = all_data["train"]["Y"]
 
         model.fit(X, Y, epochs=5)
+        
+        accuracy = model_object.evaluate(X, Y)
+        metrics = {
+            "dataset": "random_floats",
+            "accuracy": accuracy
+        }
+        return metrics
+
     @staticmethod
     def infer(model_object, input_data): # input -> processing -> inference -> output
         img_array = preprocess_image(input_data)
