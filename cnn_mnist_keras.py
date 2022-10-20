@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-
+import os
 import cinnaroll
 
 
@@ -175,7 +175,7 @@ all_data = load_data(num_classes=NUM_CLASSES, limit=100)
 model = construct_model(num_classes=NUM_CLASSES, input_shape=INPUT_SHAPE)
 
 model_input_sample = all_data["test"]["X"][0, :, :, :].reshape(1, 28, 28, 1)
-infer_func_input_sample = "/Users/jkaniewski/repos/test/mnist-keras/test_image.png"
+infer_func_input_sample = os.getcwd()+"/test_image.png"
 
 myRolloutConfig = MyRolloutConfig(
     project_id="5zVm00n97",  # project's unique identifier
@@ -184,7 +184,6 @@ myRolloutConfig = MyRolloutConfig(
     infer_func_input_format="img",  # "json", "img" or "file"
     infer_func_output_format="json",  # "json" or "img" currently supported
     infer_func_input_sample=infer_func_input_sample,  # note - for file or img just pass file path
-    metrics={}  # optional
 )
 
 cinnaroll.rollout(myRolloutConfig)
